@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>语滴 · 卡片预览（开发用）</title>
+    <style>
+      /* 这个页面只是开发时用来调卡片样式的，不参与扩展运行 */
+      body {
+        margin: 0;
+        padding: 28px;
+        background: #eef0f7;
+        font: 13px/1.5 -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      }
+      h1 {
+        font-size: 15px;
+        color: #4b5163;
+        margin-bottom: 18px;
+      }
+      .row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        margin-bottom: 26px;
+      }
+      .col {
+        width: 342px;
+      }
+      .col > p {
+        font-size: 11.5px;
+        color: #7b8194;
+        margin: 0 0 6px 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>卡片预览 —— 改 src/ui/card.js 里的样式后刷新本页即可，不必重装扩展</h1>
+
+    <div class="row">
+      <div class="col"><p>① 新词（默认：直接给释义）</p><div id="a"></div></div>
+      <div class="col"><p>② 复习 + 短语卡片</p><div id="b"></div></div>
+    </div>
+    <div class="row">
+      <div class="col"><p>③ 回忆模式（释义先遮住）</p><div id="c"></div></div>
+      <div class="col"><p>④ 保温 + 长释义换行</p><div id="d"></div></div>
+    </div>
+
+    <script type="module">
+      import { createCard } from '../src/ui/card.js';
+
+      const base = { cardSeconds: 25, quizMode: false, autoSpeak: false };
+
+      createCard({
+        word: {
+          id: 'w001',
+          type: 'word',
+          term: 'schedule',
+          phonetic: '/ˈskedʒuːl/',
+          pos: 'n. / v.',
+          meaning: '日程表；安排，排定',
+          example: 'Let us schedule a short call tomorrow morning.',
+          exampleZh: '我们把电话会议安排在明天上午吧。',
+          tags: ['office', 'core'],
+        },
+        mode: 'new',
+        settings: base,
+        container: document.getElementById('a'),
+        onAction: () => {},
+        onSkip: () => {},
+        onSpeak: () => {},
+      });
+
+      createCard({
+        word: {
+          id: 'p003',
+          type: 'phrase',
+          term: 'follow up on',
+          phonetic: '',
+          pos: 'phr.',
+          meaning: '跟进，落实',
+          example: 'I will follow up on the invoice with the vendor.',
+          exampleZh: '我会向供应商跟进这笔发票的事。',
+          tags: ['email'],
+        },
+        mode: 'review',
+        settings: base,
+        container: document.getElementById('b'),
+        onAction: () => {},
+        onSkip: () => {},
+        onSpeak: () => {},
+      });
+
+      createCard({
+        word: {
+          id: 'w042',
+          type: 'word',
+          term: 'resilient',
+          phonetic: '/rɪˈzɪliənt/',
+          pos: 'adj.',
+          meaning: '有韧性的；能迅速恢复的',
+          example: 'She stayed resilient after the setback.',
+          exampleZh: '遭遇挫折后她依然坚韧。',
+          tags: ['academic'],
+        },
+        mode: 'new',
+        settings: { ...base, quizMode: true },
+        container: document.getElementById('c'),
+        onAction: () => {},
+        onSkip: () => {},
+        onSpeak: () => {},
+      });
+
+      createCard({
+        word: {
+          id: 'w077',
+          type: 'word',
+          term: 'stakeholder',
+          phonetic: '/ˈsteɪkhoʊldər/',
+          pos: 'n.',
+          meaning: '利益相关方；股东；参与方',
+          example: 'We should align with all stakeholders before the launch.',
+          exampleZh: '上线之前我们应该和所有相关方对齐。',
+          tags: ['meeting', 'office'],
+        },
+        mode: 'recycle',
+        settings: base,
+        container: document.getElementById('d'),
+        onAction: () => {},
+        onSkip: () => {},
+        onSpeak: () => {},
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+/* 三步引导使用本地设置，只有最终确认后保存。 */
+#guideDialog { width: min(560px, calc(100vw - 32px)); padding: 28px; }
+#guideDialog .eyebrow { margin-bottom: 12px; }
+#guideDialog h2 { margin-bottom: 20px; }
+/* 标题焦点用于宣布步骤；交互控件继续使用可见焦点环。 */
+#guideTitle:focus { outline: none; }
+#guideDialog .field { margin-block: 16px; }
+#guideDialog .grid .field { margin: 0; }
+#guideDialog .diag { white-space: pre-line; line-height: 2; }
+#guideDialog .guide-skip { display: block; margin: 18px auto 0; padding: 8px; min-height: 40px; background: transparent; color: var(--muted); border: 0; font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+#guideDialog .guide-skip:hover { color: var(--accent); }
+#guideDialog button:disabled { cursor: wait; }
+@media (max-width: 480px) {
+  #guideDialog { padding: 22px 18px; border-radius: 14px; }
+  #guideDialog h2 { font-size: 22px; }
+  #guideDialog .grid { grid-template-columns: 1fr; }
+  #guideDialog .row { gap: 8px; }
+  #guideDialog .row .btn { flex: 1; }
+}

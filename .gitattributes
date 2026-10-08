@@ -1,0 +1,4 @@
+﻿# 统一行尾：仓库里一律存 LF，Windows 上也不再反复提示 CRLF 转换
+* text=auto eol=lf
+*.png binary
+*.ico binary

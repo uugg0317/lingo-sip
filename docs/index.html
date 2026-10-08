@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>语滴 Lingo Sip · 碎片英语</title>
+<meta name="description" content="在你切换标签、等待加载的那几秒里，安安静静递过来一张单词卡。纯本地运行，免注册，可随时暂停。" />
+<meta name="theme-color" content="#000000" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+
+<!--
+  这个页面的排版数值全部来自 Apple 的公开设计规范，不是"看着像"：
+  · 字号 / 字重 / 行高 / tracking 逐项对齐 Apple typography 规范
+  · 色彩只有一个交互色 Action Blue #0066cc；Apple 明令不引入第二个强调色
+  · 区块节奏靠"浅色块 ↔ 深色块"交替，色变本身就是分割线，不加装饰边框
+  · 整站只有一种阴影，且只给"落在台面上的产品图"，绝不给卡片/按钮/文字
+  · 按下态统一 scale(0.95)，这是 Apple 的系统级微交互
+  · 中文字重阶梯 400 / 600（Apple 刻意不用 500）
+-->
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   0. 设计令牌
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light dark;
+
+  /* 唯一的交互色。所有"可点"信号都是它，没有第二个 */
+  --blue: #0066cc;
+  --blue-focus: #0071e3;        /* 仅用于键盘焦点环 */
+  --blue-on-dark: #2997ff;      /* 深色块上的链接，Action Blue 在深底会消失 */
+
+  /* 台面：纯白 / 羊皮纸 / 三个近黑档 */
+  --canvas: #ffffff;
+  --parchment: #f5f5f7;
+  --tile-1: #272729;
+  --tile-2: #2a2a2c;
+  --black: #000000;
+
+  /* 文字：近黑而非纯黑，纯黑会让页面像印刷品而不是摄影 */
+  --ink: #1d1d1f;
+  --ink-80: #333333;
+  --ink-48: #7a7a7a;
+  --on-dark: #ffffff;
+  --on-dark-muted: #cccccc;
+
+  --hairline: #e0e0e0;
+  --divider: rgba(0, 0, 0, 0.08);
+
+  /* 圆角：Apple 的语法是"要么小、要么大、要么胶囊"，中间值极少 */
+  --r-sm: 8px;      /* 紧凑工具按钮 */
+  --r-md: 11px;     /* 唯一的中间值：珍珠按钮 */
+  --r-lg: 18px;     /* 浅色工具卡 */
+  --r-pill: 9999px; /* 主 CTA、搜索框 */
+  --r-none: 0;      /* 全出血色块：绝不圆角 */
+
+  /* 间距：8 的倍数，与 Apple 的 spacing 令牌一一对应 */
+  --s-xxs: 4px; --s-xs: 8px; --s-sm: 12px; --s-md: 17px;
+  --s-lg: 24px; --s-xl: 32px; --s-xxl: 48px; --s-section: 80px;
+
+  /* 唯一允许的阴影：给产品图重量感，不给 UI 层级 */
+  --product-shadow: 3px 5px 30px 0 rgba(0, 0, 0, 0.22);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   1. 排版
+   字重阶梯 400 / 600（无 500）；正文 17px 而非 16px；
+   tracking 分三段：≤21px 收紧、24px 起转正、≥80px 归零。
+   ══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 17px;          /* Apple: 正文 17px，不是 SaaS 惯用的 16px */
+  font-weight: 400;
+  line-height: 1.47;        /* 17px 正文的固定行高倍率 */
+  letter-spacing: -0.374px; /* HIG: 17pt → -26/1000 em。用 px 而非 em——
+                               em 会随字号放大，方向会反 */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; }  /* Apple 标题用 600，700 只用于极小场景 */
+
+/* 主视觉标题：56px / 600 / 1.07 / -0.28px。
+   tracking 保持微紧即可——HIG 在 56pt 只给 +6/1000em，几乎归零，
+   真正撑起"Apple 紧"的是字重与行高，不是大字距。 */
+.t-hero {
+  font-size: clamp(34px, 6vw, 56px);
+  font-weight: 600;
+  line-height: 1.07;
+  letter-spacing: -0.28px;
+}
+
+/* 色块标题：40px / 600 / 1.10 / 0（HIG 在 40pt 给 +10，换算后约 0） */
+.t-display {
+  font-size: clamp(28px, 4.2vw, 40px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+/* 小标签：21px / 600 / 1.19 / +0.231px —— 这里 tracking 是正的 */
+.t-tagline {
+  font-size: clamp(18px, 2.4vw, 21px);
+  font-weight: 600;
+  line-height: 1.19;
+  letter-spacing: 0.231px;
+}
+
+/* 副标题：24px / 300 / 1.5 / 0。
+   字重 300 在 Apple 体系里是真实存在且刻意稀用的"轻氛围"档 */
+.t-airy {
+  font-size: clamp(19px, 2.6vw, 24px);
+  font-weight: 300;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* 说明文字：14px / 400 / 1.43 / -0.224px */
+.t-caption { font-size: 14px; line-height: 1.43; letter-spacing: -0.224px; }
+.t-caption-strong { font-size: 14px; font-weight: 600; line-height: 1.29; letter-spacing: -0.224px; }
+
+/* 细则：12px / 400 / 1.0 / -0.12px */
+.t-fine { font-size: 12px; line-height: 1.5; letter-spacing: -0.12px; color: var(--ink-48); }
+
+p { margin: 0; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* 容器：文字区块锁 980px，产品网格放到 1440px——Apple 就是这么分的 */
+.wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 24px; }
+.wrap--wide { max-width: 1440px; }
+.wrap--narrow { max-width: 720px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   2. 区块节奏
+   浅块 ↔ 深块交替，色变即分割线。全出血、零圆角、零间隙。
+   ══════════════════════════════════════════════════════════════════ */
+.tile {
+  padding: var(--s-section) 0;
+  position: relative;
+}
+.tile--canvas { background: var(--canvas); color: var(--ink); }
+.tile--parchment { background: var(--parchment); color: var(--ink); }
+.tile--dark { background: var(--tile-1); color: var(--on-dark); }
+.tile--dark-2 { background: var(--tile-2); color: var(--on-dark); }
+.tile--black { background: var(--black); color: var(--on-dark); }
+
+.tile--dark a, .tile--dark-2 a, .tile--black a { color: var(--blue-on-dark); }
+.tile--dark .t-fine, .tile--dark-2 .t-fine, .tile--black .t-fine { color: var(--on-dark-muted); }
+.tile--dark .t-muted, .tile--dark-2 .t-muted, .tile--black .t-muted { color: var(--on-dark-muted); }
+
+.t-muted { color: var(--ink-48); }
+.t-lead-ink { color: var(--ink); }
+
+/* 色块内的居中栈：标题 → 一句副题 → CTA */
+.stack { text-align: center; display: grid; justify-items: center; }
+.stack > .t-airy { margin-top: var(--s-md); max-width: 620px; }
+.stack > .t-hero + .t-airy { margin-top: var(--s-lg); }
+
+/* ══════════════════════════════════════════════════════════════════
+   3. 按钮
+   两种语法：胶囊主 CTA + 紧凑工具矩形。没有第三种。
+   ══════════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: inherit;
+  font-size: 17px; font-weight: 400; line-height: 1;
+  letter-spacing: -0.374px;
+  border-radius: var(--r-pill);
+  padding: 12px 22px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  /* 只有颜色与 transform 过渡：不给按钮加阴影动画 */
+  transition: background-color 180ms var(--ease), color 180ms var(--ease),
+    transform 180ms var(--ease);
+}
+/* 主按钮：Action Blue 实底。没有渐变——Apple 明令不做装饰性渐变 */
+.btn--primary { background: var(--blue); color: #fff; }
+.btn--primary:hover { background: #0071e3; text-decoration: none; }
+/* 幽灵胶囊：同色描边，用于并列的第二个 CTA */
+.btn--ghost { background: transparent; color: var(--blue); border-color: var(--blue); }
+.btn--ghost:hover { background: rgba(0, 102, 204, 0.06); text-decoration: none; }
+/* 按下态：全站统一的微交互 */
+.btn:active { transform: scale(0.95); }
+.btn:focus-visible { outline: 2px solid var(--blue-focus); outline-offset: 3px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   4. 全局导航
+   纯黑、44px、12px 字号。Apple 的导航是最安静的一条
+   ══════════════════════════════════════════════════════════════════ */
+.gnav {
+  background: var(--black);
+  height: 44px;
+  display: flex; align-items: center;
+}
+.gnav__inner {
+  width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.gnav__brand {
+  color: var(--on-dark);
+  font-size: 12px; font-weight: 400; letter-spacing: -0.12px;
+}
+.gnav__brand b { font-weight: 600; }
+.gnav__links { display: flex; gap: 20px; }
+.gnav__links a {
+  color: var(--on-dark); font-size: 12px; letter-spacing: -0.12px; opacity: 0.86;
+}
+.gnav__links a:hover { opacity: 1; text-decoration: none; }
+
+/* 子导航：羊皮纸 80% + 毛玻璃，粘在全局导航下方。
+   这是全站第二个（也是最后一个）允许的"浮起"效果 */
+.subnav {
+  position: sticky; top: 0; z-index: 40;
+  height: 52px;
+  display: flex; align-items: center;
+  background: rgba(245, 245, 247, 0.8);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--divider);
+}
+.subnav__inner {
+  width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.subnav__title { font-size: 21px; font-weight: 600; letter-spacing: 0.231px; }
+.subnav__right { display: flex; align-items: center; gap: 20px; }
+.subnav__right a { font-size: 14px; letter-spacing: -0.224px; }
+.btn--utility {
+  font-size: 14px; letter-spacing: -0.224px;
+  padding: 8px 15px;
+  border-radius: var(--r-sm);
+  background: var(--blue); color: #fff;
+}
+.btn--utility:hover { background: #0071e3; text-decoration: none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   5. 产品卡（"落在台面上"的那一件东西）
+   唯一的阴影就给它。数值取自 Apple 规范：3px 5px 30px rgba(0,0,0,.22)
+   ══════════════════════════════════════════════════════════════════ */
+.mock {
+  margin: var(--s-xxl) auto 0;
+  max-width: 460px;
+  text-align: left;
+  background: var(--canvas);
+  color: var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: var(--product-shadow);
+  overflow: hidden;
+}
+.mock__bar { height: 3px; background: rgba(0, 102, 204, 0.12); }
+.mock__fill { height: 100%; width: 68%; background: var(--blue); }
+.mock__body { padding: var(--s-lg) var(--s-lg) var(--s-md); }
+
+.mock__row { display: flex; align-items: center; gap: var(--s-xs); margin-bottom: 14px; }
+.chip { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.chip--review { background: rgba(230, 145, 30, 0.14); color: #b26a00; }
+.chip--level { background: var(--divider); color: var(--ink-48); font-weight: 400; margin-left: auto; }
+
+.mock__word { display: flex; align-items: baseline; gap: 12px; font-size: 32px; font-weight: 600; letter-spacing: 0.4px; }
+.mock__phon { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 14px; color: var(--ink-48); }
+.mock__pos { padding: 1px 7px; border-radius: 5px; background: var(--divider); font-size: 12px; }
+.mock__meaning { margin-top: 10px; font-size: 17px; font-weight: 600; }
+
+.mock__example {
+  margin-top: 16px; padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: rgba(0, 102, 204, 0.055);
+  border-left: 3px solid rgba(0, 102, 204, 0.35);
+}
+.mock__en { font-size: 15px; letter-spacing: -0.24px; }
+.mock__zh { margin-top: 3px; font-size: 14px; color: var(--ink-48); letter-spacing: -0.224px; }
+
+.mock__actions { display: flex; gap: 10px; margin-top: 18px; }
+.mock__actions span {
+  flex: 1; text-align: center; padding: 10px 0; border-radius: var(--r-sm);
+  font-size: 15px; font-weight: 400;
+}
+.mock__actions .a { background: var(--divider); color: var(--ink-80); }
+.mock__actions .b { background: var(--blue); color: #fff; }
+.mock__hint { padding: 0 var(--s-lg) 16px; font-size: 12px; letter-spacing: -0.12px; color: var(--ink-48); text-align: center; }
+
+/* ══════════════════════════════════════════════════════════════════
+   6. 工具卡网格
+   白卡 + 1px 发丝线 + 18px 圆角，无阴影。
+   网格用 1px 间隙让底色透出来当分隔线，比给每张卡描边更轻
+   ══════════════════════════════════════════════════════════════════ */
+.grid {
+  display: grid; gap: var(--s-lg);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-top: var(--s-xxl);
+}
+.ucard {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: var(--s-lg);
+}
+.tile--parchment .ucard { background: var(--canvas); }
+
+/* 数字条：不带装饰性渐变，就用 Action Blue 的实色 */
+.stat { font-size: clamp(30px, 4vw, 40px); font-weight: 600; line-height: 1.1; letter-spacing: 0; color: var(--blue); }
+.stat__label { margin-top: var(--s-xs); font-size: 17px; font-weight: 600; letter-spacing: -0.374px; }
+.stat__desc { margin-top: var(--s-xxs); font-size: 14px; letter-spacing: -0.224px; color: var(--ink-48); }
+
+/* 权限表：发丝线分隔，不加边框盒 */
+.perms { margin-top: var(--s-xxl); }
+.perm {
+  display: grid; grid-template-columns: 190px 1fr; gap: 20px;
+  padding: 16px 0; border-top: 1px solid var(--hairline);
+  font-size: 17px; letter-spacing: -0.374px;
+}
+.perm:last-child { border-bottom: 1px solid var(--hairline); }
+.perm dt { font-weight: 600; }
+.perm dd { margin: 0; color: var(--ink-48); }
+
+/* 编号列表 */
+.steps { counter-reset: s; display: grid; gap: var(--s-sm); margin: var(--s-xl) auto 0; max-width: 460px; text-align: left; }
+.steps li { list-style: none; position: relative; padding-left: 34px; counter-increment: s; font-size: 17px; letter-spacing: -0.374px; color: var(--ink-48); }
+.steps li::before {
+  content: counter(s); position: absolute; left: 0; top: 1px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0, 102, 204, 0.1); color: var(--blue);
+  font-size: 12px; font-weight: 600; display: grid; place-items: center;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em; padding: 0.12em 0.4em; border-radius: 5px;
+  background: var(--divider);
+}
+.tile--dark code, .tile--black code { background: rgba(255, 255, 255, 0.12); color: var(--on-dark); }
+
+/* ══════════════════════════════════════════════════════════════════
+   7. 页脚
+   羊皮纸、密排、2.41 行高的链接列——这行高"看起来太大"是刻意的
+   ══════════════════════════════════════════════════════════════════ */
+.foot { background: var(--parchment); padding: 64px 0; }
+.foot__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s-xl); }
+.foot h4 { font-size: 14px; font-weight: 600; letter-spacing: -0.224px; margin: 0 0 var(--s-sm); }
+.foot ul { list-style: none; margin: 0; padding: 0; }
+.foot li { font-size: 17px; letter-spacing: -0.374px; line-height: 2.41; }  /* 密排链接列表的呼吸给了行高，不是间距 */
+.foot li a { color: var(--ink-80); }
+.foot__legal { margin-top: var(--s-xxl); padding-top: var(--s-lg); border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; gap: var(--s-sm); justify-content: space-between; }
+
+/* ══════════════════════════════════════════════════════════════════
+   8. 滚动渐显
+   初始态只在 JS 就绪后才加类，因此禁用 JS 时页面完整可读，不会白屏。
+   只动 opacity / transform，走合成层
+   ══════════════════════════════════════════════════════════════════ */
+.js .reveal { opacity: 0; transform: translateY(20px); transition: opacity 800ms var(--ease), transform 800ms var(--ease); transition-delay: var(--delay, 0ms); }
+.js .reveal.is-in { opacity: 1; transform: none; }
+
+/* ── 扩展一：时间轴的滚动渐进 ──
+   静态点列只能"看到"间隔拉长；让填充线随滚动推进，才能让人"感觉到"它。
+   实现只补一层进度条 + 一个 --p 变量，不改动原有结构。
+   未经 JS 时 --p 保持 1，静止状态就是完整的一条，不会缺一截。 */
+.demo { --p: 1; }
+.demo__track { position: relative; }
+.demo__track::before { z-index: 0; }
+.demo__progress {
+  position: absolute;
+  left: 0; top: 50%;
+  height: 2px;
+  width: calc(var(--p) * 100%);
+  background: var(--blue);
+  transform: translateY(-50%);
+  border-radius: var(--r-pill);
+  z-index: 0;
+}
+.demo__dot { z-index: 1; }
+/* 点随进度依次点亮：未到达的位置先压低透明度。
+   --i 从 0 起（0 = 第一个点，5 = 最后一个），与 --p 的 0→1 对齐。 */
+.demo__dot, .demo__label {
+  opacity: calc(0.18 + 0.82 * clamp(0, (var(--p) * 6 - var(--i, 0)), 1));
+  transition: opacity 240ms linear;
+}
+
+/* ── 扩展二：产品录屏 ──
+   <video> 与"图片/纯 CSS 还原"是互斥的两种媒体，所以按有无 poster 决定显示谁：
+   有 poster 就播视频，没有就显示原来的 CSS 卡片。
+   这样在没录屏时页面不会出现一个空的黑框。 */
+.screen { margin: var(--s-xxl) auto 0; max-width: 760px; }
+.screen__frame {
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--black);
+  box-shadow: var(--product-shadow);   /* 同样是"落在台面上"的那一件，用同一种阴影 */
+}
+.screen__frame video { display: block; width: 100%; height: auto; }
+.screen__caption { margin-top: var(--s-md); font-size: 14px; letter-spacing: -0.224px; color: var(--ink-48); text-align: center; }
+.tile--dark .screen__caption, .tile--dark-2 .screen__caption { color: var(--on-dark-muted); }
+
+/* ── 扩展三：对比表 ──
+   发丝线分隔，行高放宽；用"是/否"而不是打勾符号，
+   因为这里要表达的是行为差异，不是"谁更好" */
+.compare { margin-top: var(--s-xxl); }
+.compare__row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  gap: var(--s-md);
+  padding: var(--s-md) 0;
+  border-top: 1px solid var(--hairline);
+  align-items: baseline;
+}
+.compare__row:last-child { border-bottom: 1px solid var(--hairline); }
+.compare__row--head {
+  border-top: 0;
+  padding-top: 0;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.224px;
+}
+.compare__row--head .compare__us { color: var(--blue); }
+.compare__what { font-weight: 600; font-size: 17px; letter-spacing: -0.374px; }
+.compare__us, .compare__them { font-size: 17px; letter-spacing: -0.374px; color: var(--ink-48); }
+.compare__us { color: var(--ink); }
+.compare__note { margin-top: var(--s-lg); font-size: 14px; letter-spacing: -0.224px; color: var(--ink-48); }
+@media (max-width: 640px) {
+  .compare__row { grid-template-columns: 1fr; gap: 4px; }
+  .compare__row--head { display: none; }   /* 窄屏去掉表头，改用每行自带的前缀 */
+  .compare__us::before { content: '语滴：'; font-weight: 600; color: var(--ink); }
+  .compare__them::before { content: '云端 App：'; font-weight: 600; color: var(--ink-48); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   9. 响应式
+   Apple 的关键断点：1068 / 833 / 734 / 640 / 480
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 833px) {
+  .gnav__links { display: none; }              /* 全局导航收起，只留品牌 */
+  .subnav__right a:not(.btn--utility) { display: none; }
+}
+@media (max-width: 734px) {
+  :root { --s-section: 48px; }                 /* 竖屏平板起，色块内边距从 80 收到 48 */
+  .grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .t-hero { font-size: 34px; }
+  .t-display { font-size: 28px; }
+  .perm { grid-template-columns: 1fr; gap: 4px; }
+  .subnav__title { font-size: 18px; }
+}
+@media (max-width: 419px) {
+  .t-hero { font-size: 28px; }
+  .btn { font-size: 15px; padding: 11px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after { transition-duration: 1ms !important; animation: none !important; }
+}
+
+/* 深色系统：整页换成 Apple 的夜间台面。
+   注意这里不是"把浅色反色"，而是换成另一套真实存在的台面档位 */
+@media (prefers-color-scheme: dark) {
+  body { background: var(--black); color: var(--on-dark); }
+  .tile--canvas { background: var(--black); }
+  .tile--parchment { background: #0b0b0d; color: var(--on-dark); }
+  .tile--parchment .t-muted, .tile--parchment .stat__desc { color: #a1a1a6; }
+  .tile--canvas .t-muted { color: #a1a1a6; }
+  .ucard { background: #1c1c1e; border-color: rgba(255, 255, 255, 0.1); }
+  .mock { background: #1c1c1e; color: var(--on-dark); }
+  .mock__en, .mock__meaning { color: #f5f5f7; }
+  .mock__phon, .mock__zh, .mock__hint { color: #a1a1a6; }
+  .mock__pos, .mock__actions .a, .chip--level { background: rgba(255, 255, 255, 0.1); color: #d2d2d7; }
+  .mock__example { background: rgba(41, 151, 255, 0.1); border-left-color: rgba(41, 151, 255, 0.4); }
+  .foot { background: #0b0b0d; }
+  .foot li a, .foot h4 { color: #d2d2d7; }
+  .foot__legal { border-top-color: rgba(255, 255, 255, 0.1); }
+  .perm { border-top-color: rgba(255, 255, 255, 0.1); }
+  .perm:last-child { border-bottom-color: rgba(255, 255, 255, 0.1); }
+  .perm dd { color: #a1a1a6; }
+  .t-fine { color: #86868b; }
+  .steps li { color: #a1a1a6; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   10. 机制演示：时间轴 → 卡片
+   用一个连接线 + 圆点把"越往后越稀疏"画出来，
+   这把"间隔重复"从抽象名词变成了看得见的东西
+   ══════════════════════════════════════════════════════════════════ */
+.demo { display: grid; gap: var(--s-lg); margin-top: var(--s-xxl); }
+.demo__row {
+  display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: var(--s-lg);
+}
+.demo__when { font-size: 14px; font-weight: 600; letter-spacing: -0.224px; color: var(--ink-48); text-align: right; }
+.demo__track { position: relative; height: 26px; }
+.demo__track::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: var(--hairline);
+}
+.demo__dot {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  border-radius: var(--r-pill);
+  background: var(--blue);
+}
+.demo__dot--sm { width: 8px; height: 8px; }
+.demo__dot--md { width: 12px; height: 12px; }
+.demo__dot--lg { width: 18px; height: 18px; box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.14); }
+.demo__label { position: absolute; top: -2px; transform: translateX(-50%); font-size: 12px; letter-spacing: -0.12px; color: var(--ink-48); white-space: nowrap; }
+@media (max-width: 640px) {
+  .demo__row { grid-template-columns: 64px 1fr; gap: var(--s-sm); }
+}
+
+/* 垂直连接线：用于"它是怎么工作的"三步流程 */
+.flow { display: grid; gap: 0; margin-top: var(--s-xxl); }
+.flow__item { display: grid; grid-template-columns: 56px 1fr; gap: var(--s-lg); }
+.flow__rail { display: grid; justify-items: center; }
+.flow__node {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--blue); color: #fff;
+  font-size: 14px; font-weight: 600;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.flow__line { width: 1px; flex: 1; background: var(--hairline); min-height: 28px; }
+.flow__item:last-child .flow__line { display: none; }
+.flow__body { padding-bottom: var(--s-xl); }
+.flow__body h3 { font-size: 21px; font-weight: 600; letter-spacing: 0.231px; margin-bottom: var(--s-xs); }
+.flow__body p { color: var(--ink-48); }
+.tile--dark .flow__body p, .tile--black .flow__body p { color: var(--on-dark-muted); }
+.tile--dark .flow__line, .tile--black .flow__line { background: rgba(255, 255, 255, 0.16); }
+@media (max-width: 640px) {
+  .flow__item { grid-template-columns: 34px 1fr; gap: var(--s-md); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════════════ 全局导航：44px 纯黑，最安静的一条 ═══════════════ -->
+<nav class="gnav">
+  <div class="gnav__inner">
+    <div class="gnav__brand">语滴 <b>Lingo Sip</b></div>
+    <div class="gnav__links">
+      <a href="#how">它怎么工作</a>
+      <a href="#content">内置内容</a>
+      <a href="#privacy">数据与权限</a>
+      <a href="#get">获取</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ 子导航：粘性毛玻璃 + 常驻主 CTA ═══════════════ -->
+<div class="subnav">
+  <div class="subnav__inner">
+    <span class="subnav__title">碎片英语</span>
+    <div class="subnav__right">
+      <a href="#privacy">隐私</a>
+      <a href="#get" class="btn btn--utility">获取扩展</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ 1. 主视觉（深色块）
+     叙事第一步：一句话说清是什么，紧接着立刻给出它长什么样 ═══════════════ -->
+<section class="tile tile--dark" style="padding-top:96px">
+  <div class="wrap stack">
+    <h1 class="t-hero reveal">把发呆的那几秒<br />变成一个单词</h1>
+    <p class="t-airy reveal" style="--delay:80ms">
+      在你切换标签、等待加载、停下来想事情的间隙，安安静静递过来一张单词卡。
+    </p>
+    <div class="reveal" style="--delay:160ms;margin-top:32px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+      <a class="btn btn--primary" href="#get">获取扩展</a>
+      <a class="btn btn--ghost" href="#how">看它怎么工作</a>
+    </div>
+
+    <!-- 产品卡：全站唯一的阴影就给它，因为它"落在台面上"。
+         展示词条取自内置词表的真实数据（available / office / level 2 / 复习态）。 -->
+    <div class="mock reveal" style="--delay:240ms" role="img"
+         aria-label="单词卡示例：available，形容词，可用的、可获得的、有空的">
+      <div class="mock__bar"><div class="mock__fill"></div></div>
+      <div class="mock__body">
+        <div class="mock__row">
+          <span class="chip chip--review">复习</span>
+          <span class="chip chip--level">进阶</span>
+        </div>
+        <div class="mock__word">available <span style="font-size:15px;color:#7a7a7a">🔊</span></div>
+        <div class="mock__phon">/əˈveɪləbl/ <span class="mock__pos">adj.</span></div>
+        <div class="mock__meaning">可用的，可获得的；有空的</div>
+        <div class="mock__example">
+          <div class="mock__en">Are you available for a call at three?</div>
+          <div class="mock__zh">你三点有空通个电话吗？</div>
+        </div>
+        <div class="mock__actions">
+          <span class="a">稍后复习</span>
+          <span class="b">记得了</span>
+        </div>
+      </div>
+      <div class="mock__hint">25 秒后自动淡出 · 不算答错，也不扣分</div>
+    </div>
+
+    <p class="t-fine reveal" style="--delay:320ms;margin-top:28px">
+      默认 4 分钟全局冷却 · 每小时最多 5 张 · 鼠标停在卡片上倒计时自动暂停
+    </p>
+
+    <!-- 真机录屏（可选增强）。
+         纯 CSS 还原的卡片能证明"它长什么样"，但证明不了"它是怎么出现的"——
+         滑出、停留、淡出这三个动作只有录屏能表达。
+         放上 docs/demo.mp4 就会自动替换掉上面的 CSS 卡片并开始播放；
+         文件不存在时整块隐藏，不会留一个空的黑框。
+         muted + loop + playsinline 是自动播放的必要条件（尤其 iOS）。 -->
+    <div class="screen reveal" id="screen" style="--delay:360ms" hidden>
+      <div class="screen__frame">
+        <video id="screenVideo" muted loop playsinline preload="metadata"
+               aria-label="语滴卡片在浏览器右下角滑出、停留、然后淡出的录屏">
+          <source src="demo.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <p class="screen__caption">
+        卡片从右下角滑出 → 停 25 秒 → 你没理它就自己淡出，不算答错
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 2. 三个原则（羊皮纸块）
+     叙事第二步：只三条。多于三条用户一条都记不住 ═══════════════ -->
+<section class="tile tile--parchment" id="how">
+  <div class="wrap">
+    <div class="stack" style="justify-items:start;text-align:left">
+      <h2 class="t-display reveal">它不会占用你任何一段时间</h2>
+      <p class="t-airy t-muted reveal" style="--delay:60ms;margin-top:var(--s-md)">
+        这三个原则决定了它和所有背单词 App 的区别。
+      </p>
+    </div>
+
+    <div class="flow">
+      <div class="flow__item reveal">
+        <div class="flow__rail"><div class="flow__node">1</div><div class="flow__line"></div></div>
+        <div class="flow__body">
+          <h3>只用你本来就会浪费掉的时间</h3>
+          <p>切完标签、页面刚加载完、在某页上停手 30 秒——只有这些时刻才尝试出现。没有课程表，没有每日必修，学不完也没有任何惩罚。</p>
+        </div>
+      </div>
+      <div class="flow__item reveal" style="--delay:80ms">
+        <div class="flow__rail"><div class="flow__node">2</div><div class="flow__line"></div></div>
+        <div class="flow__body">
+          <h3>你在忙的时候，它一句话都不说</h3>
+          <p>正在输入、选中了文字、在看视频、全屏、不在当前标签页——任何一条成立就绝不打扰。决策权只集中在一个地方，不会十个标签页各弹各的。</p>
+        </div>
+      </div>
+      <div class="flow__item reveal" style="--delay:160ms">
+        <div class="flow__rail"><div class="flow__node">3</div></div>
+        <div class="flow__body">
+          <h3>没作答不算错</h3>
+          <p>卡片 25 秒后自己淡出，只记一次"见过"，20 分钟后再来。永远攒不出还不完的复习债。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 把"间隔重复"画出来：越往后间隔越大，一眼看懂它为什么不需要每天打卡。
+         数值逐档对齐 src/core/constants.js 的 BOX_INTERVALS：
+         10 分钟 → 45 分钟 → 12 小时 → 1 天 → 3 天 → 7 天 → 21 天 -->
+    <div style="margin-top:var(--s-section)">
+      <h3 class="t-tagline reveal" style="margin-bottom:var(--s-md)">同一个词，多久再见一次</h3>
+      <p class="t-caption t-muted reveal" style="--delay:60ms;margin-bottom:var(--s-xl);max-width:560px">
+        每答对一次就退到更远的盒子，间隔逐档拉长。这是它能在碎片时间里生效的原因——
+        它不靠你每天来，靠的是让每次回忆都发生在快忘掉的时候。
+      </p>
+      <div class="demo reveal" style="--delay:120ms">
+        <div class="demo__row">
+          <div class="demo__when">刚认识</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--sm" style="left:3%;--i:1"></span>
+            <span class="demo__label" style="left:3%;--i:1">10 分钟</span>
+          </div>
+        </div>
+        <div class="demo__row">
+          <div class="demo__when">答对 1 次</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--sm" style="left:20%;--i:2"></span>
+            <span class="demo__label" style="left:20%;--i:2">45 分钟</span>
+          </div>
+        </div>
+        <div class="demo__row">
+          <div class="demo__when">答对 2 次</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--md" style="left:42%;--i:3"></span>
+            <span class="demo__label" style="left:42%;--i:3">12 小时</span>
+          </div>
+        </div>
+        <div class="demo__row">
+          <div class="demo__when">答对 3 次</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--md" style="left:62%;--i:4"></span>
+            <span class="demo__label" style="left:62%;--i:4">1 天</span>
+          </div>
+        </div>
+        <div class="demo__row">
+          <div class="demo__when">答对 5 次</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--md" style="left:80%;--i:5"></span>
+            <span class="demo__label" style="left:80%;--i:5">7 天</span>
+          </div>
+        </div>
+        <div class="demo__row">
+          <div class="demo__when">已掌握</div>
+          <div class="demo__track">
+            <div class="demo__progress"></div>
+            <span class="demo__dot demo__dot--lg" style="left:95%;--i:6"></span>
+            <span class="demo__label" style="left:95%;--i:6">21 天</span>
+          </div>
+        </div>
+      </div>
+      <p class="t-caption t-muted reveal" style="--delay:180ms;margin-top:var(--s-lg);max-width:560px">
+        卡片自己淡出（你没作答）不算遗忘，只往后推 20 分钟重新排一次。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 3. 内置内容（浅色块）
+     叙事第三步：用具体数字支撑上面的承诺 ═══════════════ -->
+<section class="tile tile--canvas" id="content">
+  <div class="wrap wrap--wide">
+    <div class="stack">
+      <h2 class="t-display reveal">装好即可用</h2>
+      <p class="t-airy t-muted reveal" style="--delay:60ms">
+        128 个高频单词 + 36 个常用短语，按"最有用"排序，不需要你先配置什么。
+      </p>
+    </div>
+
+    <!-- 工具卡网格：白卡 + 1px 发丝线 + 18px 圆角，无阴影 -->
+    <div class="grid reveal" style="--delay:120ms">
+      <div class="ucard">
+        <div class="stat">45%</div>
+        <div class="stat__label">办公 · 会议 · 邮件 · 技术</div>
+        <div class="stat__desc">最近用得上的一批</div>
+      </div>
+      <div class="ucard">
+        <div class="stat">27%</div>
+        <div class="stat__label">核心与日常</div>
+        <div class="stat__desc">打底的高频词</div>
+      </div>
+      <div class="ucard">
+        <div class="stat">15%</div>
+        <div class="stat__label">学术</div>
+        <div class="stat__desc">读写场景常见</div>
+      </div>
+      <div class="ucard">
+        <div class="stat">13%</div>
+        <div class="stat__label">旅行口语</div>
+        <div class="stat__desc">出门能直接用</div>
+      </div>
+    </div>
+
+    <div class="grid reveal" style="--delay:180ms">
+      <div class="ucard">
+        <div class="stat">7</div>
+        <div class="stat__label">档间隔重复</div>
+        <div class="stat__desc">到期复习优先于新词</div>
+      </div>
+      <div class="ucard">
+        <div class="stat">0</div>
+        <div class="stat__label">依赖与构建步骤</div>
+        <div class="stat__desc">没有 npm 包，没有打包流程</div>
+      </div>
+      <div class="ucard">
+        <div class="stat">1</div>
+        <div class="stat__label">个存储键，整体备份原子写入</div>
+        <div class="stat__desc">每次操作立刻落盘，中断也不丢</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 4. 一句话宣言（纯黑块）
+     在两组数据之间插一块"只讲一件事"的深色块，是 Apple 的节奏手法 ═══════════════ -->
+<section class="tile tile--black">
+  <div class="wrap wrap--narrow stack">
+    <h2 class="t-display reveal">没有账号，没有服务器<br />没有分析统计</h2>
+    <p class="t-airy reveal" style="--delay:80ms;color:var(--on-dark-muted)">
+      所有数据存在浏览器的本地存储里，不上传任何地方。它没有配置任何外部主机权限，
+      也没有一处向外部地址发起请求。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════ 4.5 与云端背单词 App 的差别（浅色块）
+     放在隐私块之前，因为"我为什么要换"是消费级用户最大的疑虑。
+     刻意不点名任何产品，也不列"谁更好"——只把两边的事实摆在一起 ═══════════════ -->
+<section class="tile tile--canvas">
+  <div class="wrap">
+    <div class="stack" style="justify-items:start;text-align:left">
+      <h2 class="t-display reveal">它和云端背单词 App 不一样的地方</h2>
+      <p class="t-airy t-muted reveal" style="--delay:60ms;margin-top:var(--s-md);max-width:640px">
+        不是说谁更好。它们各自解决不同的问题，这里只把两边的事实摆出来。
+      </p>
+    </div>
+
+    <div class="compare reveal" style="--delay:120ms">
+      <div class="compare__row compare__row--head">
+        <div class="compare__what"></div>
+        <div class="compare__us">语滴 Lingo Sip</div>
+        <div class="compare__them">多数云端背单词 App</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">谁发起</div>
+        <div class="compare__us">它找你，在你刚好有空的那几秒</div>
+        <div class="compare__them">你找它，要专门腾出时间</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">学不完会怎样</div>
+        <div class="compare__us">没有必修，攒不出复习债</div>
+        <div class="compare__them">通常有连续打卡与待复习堆积</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">没作答</div>
+        <div class="compare__us">不算错，20 分钟后再来一次</div>
+        <div class="compare__them">多数会记为未完成或答错</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">数据在哪</div>
+        <div class="compare__us">只在这台电脑的浏览器里，无账号</div>
+        <div class="compare__them">在它们的服务器上，通常需要账号</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">能否自行核实</div>
+        <div class="compare__us">全部源码可读，可查有没有联网</div>
+        <div class="compare__them">无法核实服务端如何处理数据</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">跨设备同步</div>
+        <div class="compare__us">不支持，靠导出备份手动搬</div>
+        <div class="compare__them">支持，登录即同步</div>
+      </div>
+      <div class="compare__row">
+        <div class="compare__what">内容规模</div>
+        <div class="compare__us">内置 128 词 + 36 短语，可导入自己的</div>
+        <div class="compare__them">题库通常大得多，也有课程体系</div>
+      </div>
+    </div>
+
+    <p class="compare__note reveal" style="--delay:180ms">
+      最后两行是它的短板，写在前面：它不做跨设备同步，内容量也比不上成熟题库。
+      它换来的东西在更上面那几行。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════ 5. 数据与权限（羊皮纸块）
+     信任本身就是转化的一部分，所以把权限逐条摊开 ═══════════════ -->
+<section class="tile tile--parchment" id="privacy">
+  <div class="wrap">
+    <div class="stack" style="justify-items:start;text-align:left">
+      <h2 class="t-display reveal">六项权限，各有用途</h2>
+      <p class="t-airy t-muted reveal" style="--delay:60ms;margin-top:var(--s-md)">
+        它只要这六项，每一项都能说清为什么。
+      </p>
+    </div>
+
+    <dl class="perms reveal" style="--delay:120ms">
+      <div class="perm"><dt>storage</dt><dd>存学习进度、设置与统计</dd></div>
+      <div class="perm"><dt>alarms</dt><dd>每分钟一次的定时兜底与跨天归零</dd></div>
+      <div class="perm"><dt>idle</dt><dd>判断你是否离开电脑，离开时绝不打扰</dd></div>
+      <div class="perm"><dt>tabs</dt><dd>知道当前在哪个标签页，只在你看的那页出现</dd></div>
+      <div class="perm"><dt>tts</dt><dd>离线朗读，不依赖任何在线发音服务</dd></div>
+      <div class="perm"><dt>notifications</dt><dd>浏览器不在前台时，用系统通知把单词送到桌面</dd></div>
+    </dl>
+
+    <div class="grid" style="margin-top:var(--s-xxl)">
+      <div class="ucard reveal">
+        <div class="stat__label">每天自动备份</div>
+        <div class="stat__desc" style="margin-top:var(--s-xs)">
+          跨天时自动留一份快照，保留最近 7 份。恢复前会先给"现在"留一份，所以恢复错了也能退回来。
+        </div>
+      </div>
+      <div class="ucard reveal" style="--delay:60ms">
+        <div class="stat__label">导入是合并，不是覆盖</div>
+        <div class="stat__desc" style="margin-top:var(--s-xs)">
+          导入备份前先算差异、给出预览，确认之前不写任何数据。只补缺的词，不回退已掌握的进度。
+        </div>
+      </div>
+      <div class="ucard reveal" style="--delay:120ms">
+        <div class="stat__label">生词本可以带走</div>
+        <div class="stat__desc" style="margin-top:var(--s-xs)">
+          支持 CSV / TSV / JSON 导入导出，能搬到 Excel、Anki 或别的工具里，随时一键暂停。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 6. 行动号召（深色块）
+     叙事终点：一个主按钮。不并列第二个，避免选择困难 ═══════════════ -->
+<section class="tile tile--dark-2" id="get">
+  <div class="wrap wrap--narrow stack">
+    <h2 class="t-display reveal">现在装上</h2>
+    <p class="t-airy reveal" style="--delay:60ms;color:var(--on-dark-muted)">
+      零依赖、零构建、纯本地。约 1 分钟。
+    </p>
+    <div class="reveal" style="--delay:120ms;margin-top:32px">
+      <a class="btn btn--primary" href="#get">加载已解压的扩展程序</a>
+    </div>
+
+    <ol class="steps reveal" style="--delay:180ms">
+      <li>地址栏打开 <code>edge://extensions</code>，Chrome 用 <code>chrome://extensions</code></li>
+      <li>打开「开发人员模式」</li>
+      <li>点「加载解压缩的扩展」，选择含 <code>manifest.json</code> 的那一层文件夹</li>
+    </ol>
+
+    <p class="t-fine reveal" style="--delay:240ms;margin-top:28px">
+      装好后刷新一下已开着的标签页——浏览器只会把内容脚本注入到之后新加载的页面里。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════ 页脚：羊皮纸、密排、2.41 行高 ═══════════════ -->
+<footer class="foot">
+  <div class="wrap wrap--wide">
+    <div class="foot__cols">
+      <div>
+        <h4>它是什么</h4>
+        <ul>
+          <li><a href="#how">它怎么工作</a></li>
+          <li><a href="#content">内置词库</a></li>
+          <li><a href="#privacy">数据与权限</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>怎么用</h4>
+        <ul>
+          <li><a href="#get">安装步骤</a></li>
+          <li><a href="#how">调整打扰频率</a></li>
+          <li><a href="#privacy">导入自己的生词本</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>开发者</h4>
+        <ul>
+          <li><a href="#content">零依赖与零构建</a></li>
+          <li><a href="#privacy">数据格式</a></li>
+          <li><a href="#get">本地运行</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot__legal t-fine">
+      <span>语滴 Lingo Sip · 碎片英语</span>
+      <span>纯本地运行 · 免注册 · 可随时暂停</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* 先给 <html> 打标记，再启用渐显。
+   这样禁用 JS 或脚本报错时，.reveal 元素不会被隐藏成空白页——
+   "内容默认可见"是不能丢的降级底线。 */
+document.documentElement.classList.add('js');
+
+/* ══════════════════════════════════════════════════════════════════
+   一、滚动渐显
+   用 IntersectionObserver 而非监听 scroll：滚动回调在移动端每帧触发，
+   回调里做计算会掉帧；Observer 由浏览器在合成阶段调度，几乎不占主线程。
+   ══════════════════════════════════════════════════════════════════ */
+(function reveal() {
+  const items = document.querySelectorAll('.reveal');
+  if (!items.length) return;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || !('IntersectionObserver' in window)) {
+    items.forEach((el) => el.classList.add('is-in'));
+    return;
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('is-in');
+      io.unobserve(e.target);   // 只播一次；反复渐显会让人以为页面在闪
+    }
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -6% 0px',  // 进入视口约一成后再触发，避免刚露头就播完
+  });
+  items.forEach((el) => io.observe(el));
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   二、产品录屏（可选增强）
+   docs/demo.mp4 存在就自动替换掉 CSS 还原的卡片并播放；
+   不存在就把整块隐藏，不留一个空黑框。
+   ══════════════════════════════════════════════════════════════════ */
+(function screenRecording() {
+  const screen = document.getElementById('screen');
+  const video = document.getElementById('screenVideo');
+  if (!screen || !video) return;
+
+  const hide = () => screen.setAttribute('hidden', '');
+  const show = () => {
+    screen.removeAttribute('hidden');
+    // 静音 + playsinline 是自动播放的前提；被拦下就静默停在首帧，不报错
+    video.play().catch(() => {});
+  };
+
+  // 用 error 事件探测而不是先发 HEAD 请求：省一次网络往返，
+  // 而且离线用 file:// 打开时同样判断得出来。
+  video.addEventListener('error', hide);
+  video.addEventListener('loadeddata', show);
+  if (video.readyState >= 2) show();
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   三、时间轴滚动渐进
+   把"间隔越拉越长"从静态事实变成看得见的过程。
+   只在进入视口后才挂 scroll 监听，滚出即注销——否则一个已经滚过的区块
+   会一直参与滚动计算，纯属浪费。
+   reduced-motion 下直接不启动，样式表里 --p 保持 1（完整的一条）。
+   ══════════════════════════════════════════════════════════════════ */
+(function timelineProgress() {
+  const demo = document.querySelector('.demo');
+  if (!demo) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+
+  let ticking = false;
+  const paint = () => {
+    const r = demo.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // 区块顶部从视口 85% 处走到 35% 处的过程映射为 0 → 1
+    const p = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (vh * 0.5)));
+    demo.style.setProperty('--p', p.toFixed(3));
+    ticking = false;
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(paint);   // rAF 节流：读 getBoundingClientRect 会强制布局
+  };
+
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        paint();
+      } else {
+        window.removeEventListener('scroll', onScroll);
+      }
+    }
+  });
+  io.observe(demo);
+})();
+
+/* ══════════════════════════════════════════════════════════════════
+   四、子导航发丝线
+   离开顶部才出现，滚动前保持完全贴合上方色块
+   ══════════════════════════════════════════════════════════════════ */
+(function subnavEdge() {
+  const bar = document.querySelector('.subnav');
+  if (!bar) return;
+  let ticking = false;
+  const sync = () => {
+    bar.style.borderBottomColor = window.scrollY > 8 ? 'rgba(0,0,0,0.08)' : 'transparent';
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(sync);
+  }, { passive: true });
+  sync();
+})();
+</script>
+</body>
+</html>

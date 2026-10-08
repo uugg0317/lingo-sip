@@ -1,0 +1,79 @@
+{
+  "manifest_version": 3,
+  "name": "语滴 Lingo Sip · 碎片英语",
+  "version": "1.2.15",
+  "description": "在你切换标签、等待加载、发呆停顿的间隙，用 10-30 秒认识一个单词。纯本地运行、免注册、可随时暂停。",
+  "minimum_chrome_version": "110",
+
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "32": "assets/icons/icon32.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+
+  "action": {
+    "default_title": "语滴 Lingo Sip（点击查看今日进度）",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "32": "assets/icons/icon32.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+
+  "chrome_url_overrides": {
+    "newtab": "src/newtab/newtab.html"
+  },
+
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "idle",
+    "tabs",
+    "tts",
+    "notifications",
+    "contextMenus"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/content/bootstrap.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/content/*.js",
+        "src/core/*.js",
+        "src/ui/*.js",
+        "src/data/*.js"
+      ],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+
+  "commands": {
+    "show-card-now": {
+      "suggested_key": {
+        "default": "Alt+Shift+E"
+      },
+      "description": "立即在当前标签页弹出一张单词卡"
+    }
+  }
+}

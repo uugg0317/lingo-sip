@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>语滴 Lingo Sip · 设置</title>
+    <link rel="stylesheet" href="../ui/theme.css" />
+    <link rel="stylesheet" href="options.css" />
+    <link rel="stylesheet" href="word-manager.css" />
+    <link rel="stylesheet" href="onboarding.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#settingsContent">跳到设置内容</a>
+    <header class="top">
+      <div class="brand">
+        <span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3C9 7 5.5 10.2 5.5 14a6.5 6.5 0 0 0 13 0C18.5 10.2 15 7 12 3Z" stroke="currentColor" stroke-width="1.7"/><path d="M9 14a3 3 0 0 0 3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+        <div>
+          <p class="brand-name">语滴 <span>Lingo Sip</span></p>
+          <p class="sub">让英语学习，自然融入每一天</p>
+        </div>
+      </div>
+      <div class="top-status">
+        <span id="savedTip" class="saved" role="status" aria-live="polite">更改会自动保存</span>
+        <span class="pill" id="statusPill">加载中…</span>
+        <span class="pill pill--soft" id="todayPill">今日 0 / 20</span>
+      </div>
+    </header>
+
+    <div class="settings-shell">
+      <aside class="sidebar">
+        <nav class="section-nav" aria-label="设置分组">
+          <p class="nav-heading">学习偏好</p>
+          <a href="#pacing" aria-current="location"><span class="nav-index">01</span>学习节奏</a>
+          <a href="#triggers"><span class="nav-index">02</span>触发时机</a>
+          <a href="#limits"><span class="nav-index">03</span>频率与安静时段</a>
+          <p class="nav-heading">内容与提醒</p>
+          <a href="#notice"><span class="nav-index">04</span>桌面提醒</a>
+          <a href="#blacklistCard"><span class="nav-index">05</span>免打扰名单</a>
+          <a href="#bank"><span class="nav-index">06</span>我的词库</a>
+          <p class="nav-heading">管理与帮助</p>
+          <a href="#data"><span class="nav-index">07</span>数据与备份</a>
+          <a href="#entries"><span class="nav-index">08</span>学习入口</a>
+          <a href="#diagnostics"><span class="nav-index">09</span>运行诊断</a>
+          <a href="#developer"><span class="nav-index">10</span>开发设置</a>
+        </nav>
+        <div class="privacy-note"><span class="privacy-mark" aria-hidden="true"></span><p>学习数据保存在本机<br><span>无需账号，安心积累。</span></p></div>
+      </aside>
+      <main id="settingsContent" tabindex="-1">
+        <div class="page-heading">
+          <p class="eyebrow">LEARNING PREFERENCES</p>
+          <h1>你的学习，由你定义。</h1>
+          <p>调整节奏、整理词库，找到适合自己的每一小步。</p>
+          <button class="btn" id="btnOpenGuide" type="button">重新选择学习场景与节奏</button>
+        </div>
+      <!-- ============ 学习节奏 ============ -->
+      <section class="card" id="pacing">
+        <h2>学习节奏</h2>
+        <p class="hint">决定一张卡片长什么样、待多久。默认值已经按"10~30 秒完成一张"调好。</p>
+
+        <div class="grid">
+          <label class="field">
+            <span class="label">每日目标（张）</span>
+            <input type="number" id="dailyGoal" min="1" max="200" step="1" />
+            <span class="desc">达到目标后角标变成 ✓，但不会阻止你继续学。</span>
+          </label>
+
+          <label class="field">
+            <span class="label">目标统计口径</span>
+            <select id="goalMetric"><option value="answered">主动作答</option><option value="shown">卡片展示</option></select>
+            <span class="desc">主动作答只计算“记得了”与“稍后复习”；切换口径不删除历史记录。</span>
+          </label>
+
+          <label class="field">
+            <span class="label">单张卡片停留时长</span>
+            <select id="cardSeconds"></select>
+            <span class="desc">没人操作就自动淡出，不算答错，也不会扣分。</span>
+          </label>
+
+          <label class="field">
+            <span class="label">每天最多引入新词</span>
+            <input type="number" id="maxNewPerDay" min="0" max="200" step="1" />
+            <span class="desc">额度用完后只做复习，不硬塞新词。</span>
+          </label>
+
+          <label class="field">
+            <span class="label">发音语速 <b id="speechRateValue">0.95</b></span>
+            <input type="range" id="speechRate" min="0.5" max="1.5" step="0.05" />
+            <span class="desc">使用系统自带语音，离线可用，不联网。</span>
+          </label>
+
+          <label class="field">
+            <span class="label">本机英文声音</span>
+            <select id="voiceName"><option value="">系统默认</option></select>
+            <span class="desc" id="voiceInfo">正在读取本机声音…</span>
+          </label>
+        </div>
+        <div class="row row--right"><button class="btn" id="btnRefreshVoices">刷新声音</button><button class="btn" id="btnVoicePreview">试听一句</button></div>
+        <p class="result" id="voiceResult" role="status"></p>
+
+        <div class="switches">
+          <label class="switch">
+            <input type="checkbox" id="quizMode" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>回忆模式</b>
+              <em>先只给单词和音标，想好了再看释义（学习效果更好，但多花 3 秒）</em>
+            </span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="autoSpeak" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>出现即朗读</b>
+              <em>默认关闭：开会、共享屏幕或安静环境时不会突然出声。需要时按空格即可发音。</em>
+            </span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" id="recycleMastered" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>已掌握的词偶尔回来</b>
+              <em>超过两周没见的已掌握词会再出现一次，防止遗忘。</em>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ============ 介入时机 ============ -->
+      <section class="card" id="triggers">
+        <h2>可介入的时机</h2>
+        <p class="hint">
+          这些都是"任务与任务之间的空隙"。全部关掉也不会报错，只是不再自动出现，随时可以点扩展图标手动学一张。
+        </p>
+
+        <div class="switches">
+          <label class="switch">
+            <input type="checkbox" id="triggerTabSwitch" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>切换标签页之后</b>
+              <em>最典型的任务间隙：一个任务收尾、另一个任务开始之前。延迟 1.2 秒等页面渲染完。</em>
+            </span>
+          </label>
+
+          <label class="switch">
+            <input type="checkbox" id="triggerPageLoad" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>页面加载完成时</b>
+              <em>等待结束的那一瞬间。延迟 1.5 秒，避免和页面自己的弹窗打架。</em>
+            </span>
+          </label>
+
+          <label class="switch">
+            <input type="checkbox" id="triggerIdle" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>页面内停顿</b>
+              <em>鼠标键盘滚动都停下来一段时间。正在打字、选中文字、播放音视频时永不触发。</em>
+            </span>
+          </label>
+          <div class="inline-field">
+            <label for="idleSeconds">停顿判定阈值</label>
+            <input type="number" id="idleSeconds" min="10" max="600" step="5" />
+            <span>秒</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="triggerTimer" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>定时兜底</b>
+              <em>持续忙碌、一直没出现自然空隙时，主动找一次机会。</em>
+            </span>
+          </label>
+          <div class="inline-field">
+            <label for="timerMinutes">兜底间隔</label>
+            <input type="number" id="timerMinutes" min="10" max="480" step="5" />
+            <span>分钟</span>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="triggerReturn" />
+            <span class="track"><span class="thumb"></span></span>
+            <span>
+              <b>离开电脑后回来</b>
+              <em>默认关闭（最谨慎的一类时机：刚回到桌前通常有正事）。</em>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ============ 频率闸门 ============ -->
+      <section class="card" id="limits">
+        <h2>频率闸门</h2>
+        <p class="hint">即使时机合适，也必须同时通过下面所有限制才会出现。这是"低打扰"的最后一道保险。</p>
+
+        <div class="grid">
+          <label class="field">
+            <span class="label">两次之间的最小间隔（分钟）</span>
+            <input type="number" id="cooldownMinutes" min="1" max="120" step="1" />
+            <span class="desc">默认 4 分钟。调大 = 更安静。</span>
+          </label>
+          <label class="field">
+            <span class="label">每小时上限（张）</span>
+            <input type="number" id="hourlyCap" min="1" max="60" step="1" />
+            <span class="desc">按自然小时统计，整点归零。</span>
+          </label>
+          <label class="field">
+            <span class="label">每天上限（张）</span>
+            <input type="number" id="dailyCap" min="1" max="300" step="1" />
+            <span class="desc">手动点"立即学一张"不受此限制。</span>
+          </label>
+          <label class="field">
+            <span class="label">同一标签页的最小间隔（分钟）</span>
+            <input type="number" id="tabCooldownMinutes" min="1" max="240" step="1" />
+            <span class="desc">防止在一个页面上反复被打扰。</span>
+          </label>
+        </div>
+
+        <h3>安静时段</h3>
+        <label class="switch">
+          <input type="checkbox" id="quietEnabled" />
+          <span class="track"><span class="thumb"></span></span>
+          <span><b>启用安静时段</b><em>例如 22:00 - 08:00，跨天自动处理。</em></span>
+        </label>
+        <div class="inline-field">
+          <label for="quietStart">从</label>
+          <select id="quietStart"></select>
+          <label for="quietEnd">到</label>
+          <select id="quietEnd"></select>
+        </div>
+      </section>
+
+      <!-- ============ 桌面提醒 ============ -->
+      <section class="card" id="notice">
+        <h2>桌面提醒（系统通知）</h2>
+        <p class="hint">
+          浏览器不在前台时——最小化、被别的软件盖住、你在桌面上——卡片浮层没地方画。
+          打开这一项后改用 <b>Windows 系统通知</b>：它出现在右下角，盖在任何软件上面都能看到。
+          点通知上的「记得了 / 稍后复习」直接作答，点通知本体则打开连学窗。
+          它和浏览器里的卡片共用同一套间隔重复与统计，不会各记各的。
+        </p>
+
+        <label class="switch">
+          <input type="checkbox" id="notifyEnabled" />
+          <span class="track"><span class="thumb"></span></span>
+          <span>
+            <b>不在浏览器时用系统通知提醒</b>
+            <em>需要系统通知权限。Windows 的"专注助手"开启时会把它压掉。</em>
+          </span>
+        </label>
+
+        <label class="switch">
+          <input type="checkbox" id="notifySound" />
+          <span class="track"><span class="thumb"></span></span>
+          <span>
+            <b>通知到达时发出提示音</b>
+            <em>关掉就完全静音，只在右下角出现，适合办公室或安静环境。静音后容易错过，建议同时把上面的间隔调长。</em>
+          </span>
+        </label>
+
+        <div class="inline-field">
+          <label for="notifyMinutes">两条通知之间至少间隔</label>
+          <input type="number" id="notifyMinutes" min="5" max="480" step="5" />
+          <span>分钟</span>
+        </div>
+
+        <div class="row row--right">
+          <button class="btn" id="btnTestNotice">发送一条测试通知</button>
+        </div>
+        <div class="result" id="noticeResult" role="status" aria-live="polite"></div>
+      </section>
+
+      <!-- ============ 免打扰名单 ============ -->
+      <section class="card" id="blacklistCard">
+        <h2>免打扰名单</h2>
+        <p class="hint">
+          每行一条。支持域名（<code>mail.google.com</code>、<code>*.bank.com</code>）或整条网址通配（<code>*://*.example.com/inbox*</code>）。
+          网银、公司内网、视频网站建议加进来。
+        </p>
+        <label class="label" for="blacklist">不显示学习卡片的网站</label>
+        <textarea id="blacklist" rows="5" spellcheck="false" placeholder="mail.google.com&#10;*.bank.com&#10;*://*.company.com/*"></textarea>
+      </section>
+
+      <!-- ============ 词库 ============ -->
+      <section class="card" id="bank">
+        <h2>词库</h2>
+        <p class="hint" id="bankStats">正在统计…</p>
+
+        <h3>启用哪些内置分类</h3>
+        <p class="hint">不选 = 全部启用。只选 1~2 个分类可以让内容更贴合你近期的工作场景。</p>
+        <div class="chips" id="tagChips"></div>
+
+        <h3>添加一个词</h3>
+        <div class="row add-word">
+          <label class="field"><span class="label">单词或短语</span><input type="text" id="newTerm" placeholder="例如 follow up on" /></label>
+          <label class="field"><span class="label">中文释义</span><input type="text" id="newMeaning" placeholder="例如 跟进" /></label>
+          <button class="btn" id="btnAddWord">添加词条</button>
+        </div>
+        <details class="word-extra"><summary>补充音标与例句（可选）</summary><div class="grid">
+          <label class="field"><span class="label">音标</span><input type="text" id="newPhonetic" /></label>
+          <label class="field"><span class="label">词性</span><input type="text" id="newPos" placeholder="例如 n. / v." /></label>
+          <label class="field"><span class="label">英文例句</span><textarea id="newExample" rows="2"></textarea></label>
+          <label class="field"><span class="label">例句翻译</span><textarea id="newExampleZh" rows="2"></textarea></label>
+          <label class="field"><span class="label">词条类型</span><select id="newType"><option value="auto">沿用既有；新词默认为单词</option><option value="word">单词</option><option value="phrase">短语</option></select></label>
+        </div></details>
+        <div class="result" id="wordAddResult" role="status" aria-live="polite"></div>
+
+        <h3>导入生词本</h3>
+        <p class="hint">
+          支持三种格式：本扩展导出的 JSON、CSV / TSV（首行可以是表头：term, phonetic, pos, meaning, example, exampleZh, tags, level），
+          以及最简的两列清单 <code>单词,意思</code>。重复导入同一个词不会重置已有进度。
+        </p>
+        <label class="label" for="importFile">选择词库文件</label>
+        <div class="row import-file-row">
+          <input type="file" id="importFile" accept=".json,.csv,.txt,.tsv" />
+          <button class="btn" id="btnTemplate">下载模板</button>
+        </div>
+        <label class="label import-label" for="importText">或直接粘贴词库内容</label>
+        <textarea id="importText" rows="5" spellcheck="false" placeholder="把 JSON / CSV 内容直接粘贴在这里也可以"></textarea>
+        <div class="row row--right">
+          <button class="btn btn--primary" id="btnImport">预览导入</button>
+        </div>
+        <div class="result" id="importResult" role="status" aria-live="polite"></div>
+        <pre class="diag" id="wordImportPreview" tabindex="-1" hidden></pre>
+        <div class="row row--right"><button class="btn btn--primary" id="btnConfirmWords" hidden>确认导入</button><button class="btn" id="btnCancelWords" hidden>取消</button></div>
+
+        <h3>词条管理 <span class="count" id="customCount">0</span></h3>
+        <div class="grid word-filters">
+          <label class="field"><span class="label">搜索词条</span><input type="search" id="wordSearch" placeholder="单词、释义或例句" /></label>
+          <label class="field"><span class="label">范围</span><select id="wordScope"><option value="custom">我的词条</option><option value="all">全部词库</option></select></label>
+          <label class="field"><span class="label">学习状态</span><select id="wordStatus"><option value="all">全部状态</option><option value="new">未学</option><option value="learning">在学</option><option value="mastered">已掌握</option></select></label>
+        </div>
+        <p class="hint" id="wordListInfo" role="status"></p>
+        <div class="list" id="customList"></div>
+        <div class="row pagination"><button class="btn" id="wordPrev">上一页</button><span id="wordPage" aria-live="polite">第 1 页</span><button class="btn" id="wordNext">下一页</button></div>
+        <div class="row"><p class="result" id="wordManageResult" role="status"></p><button class="btn" id="btnUndoDelete" hidden>撤销删除</button></div>
+        <div class="row row--right">
+          <button class="btn" id="btnExportCSV">导出 CSV</button>
+          <button class="btn" id="btnExportJSON">导出 JSON</button>
+          <button class="btn btn--danger" id="btnClearCustom">清空我的词条</button>
+        </div>
+      </section>
+
+      <!-- ============ 数据 ============ -->
+      <section class="card" id="data">
+        <h2>数据与备份</h2>
+        <p class="hint">学习进度、词库和设置均保存在本机。定期导出备份，换电脑时也能接着学。</p>
+
+        <h3>近 7 天</h3>
+        <div class="chart" id="chart" role="img" aria-label="近 7 天学习记录"></div>
+
+        <h3>角标显示</h3>
+        <div class="inline-field">
+          <label class="sr-only" for="badgeMode">角标显示方式</label>
+          <select id="badgeMode"></select>
+          <span class="desc">工具栏图标上的小数字。</span>
+        </div>
+
+        <h3>备份</h3>
+        <p class="hint">
+          换电脑时导出备份再导入即可。导入前会先给你看一份差异预览，
+          <strong>点确认之前不会改动任何数据</strong>。
+        </p>
+        <div class="inline-field">
+          <label><input type="radio" name="importMode" id="modeMerge" value="merge" checked /> 合并（推荐）</label>
+          <label><input type="radio" name="importMode" id="modeReplace" value="replace" /> 覆盖</label>
+          <span class="desc">
+            合并只补充缺失的词、不回退已有进度；覆盖则把当前进度整个换成备份里的内容。
+          </span>
+        </div>
+        <div class="row row--right">
+          <button class="btn" id="btnExportBackup">导出完整备份</button>
+          <button class="btn" id="btnImportBackup">导入备份</button>
+          <button class="btn btn--danger" id="btnResetProgress">清空学习进度</button>
+          <button class="btn btn--danger" id="btnResetAll">恢复出厂设置</button>
+        </div>
+        <div class="result" id="backupResult" role="status" aria-live="polite"></div>
+        <pre class="diag" id="backupPreview" tabindex="-1" hidden></pre>
+        <div class="row row--right">
+          <button class="btn btn--primary" id="btnConfirmImport" hidden>确认导入</button>
+          <button class="btn" id="btnCancelImport" hidden>取消导入</button>
+        </div>
+        <input type="file" id="backupFile" accept=".json" hidden />
+
+        <h3>自动备份</h3>
+        <p class="hint">
+          每天跨天时自动留一份快照，只保留最近 <span id="snapKeep">7</span> 份。
+          不用记得手动导出；万一进度出问题，可以从这里整份恢复。
+        </p>
+        <div class="inline-field">
+          <label class="sr-only" for="snapSelect">选择自动备份快照</label>
+          <select id="snapSelect"></select>
+          <span class="desc" id="snapStatus" role="status">正在读取…</span>
+        </div>
+        <div class="row row--right">
+          <button class="btn" id="btnSnapshotNow">立即留一份快照</button>
+          <button class="btn" id="btnRestoreSnapshot">恢复选中的快照</button>
+        </div>
+      </section>
+
+      <!-- ============ 入口 ============ -->
+      <section class="card" id="entries">
+        <h2>入口</h2>
+        <p class="hint">
+          除了自动出现，也可以随时主动学一张：
+        </p>
+        <ul class="hint">
+          <li><strong>右键任意网页</strong> → 语滴：立即学一张 / 打开连学窗</li>
+          <li><strong>快捷键</strong> <kbd>Alt+Shift+E</kbd> → 在当前标签页立刻弹一张</li>
+          <li><strong>工具栏图标</strong> → 今日进度、暂停、立即学一张</li>
+          <li><strong>新标签页</strong>（Ctrl+T）→ 顶部是搜索框，下面一张卡片</li>
+        </ul>
+        <p class="hint">
+          不需要新标签页的话：到 <code>edge://extensions</code> → 本扩展的「详细信息」，
+          关闭「<strong>打开新标签页时</strong>」这一项即可，其他功能不受影响。
+        </p>
+      </section>
+
+      <!-- ============ 诊断 ============ -->
+      <section class="card" id="diagnostics">
+        <h2>诊断</h2>
+        <p class="hint">如果觉得"怎么一个都没弹"，先看这里——它会直接告诉你被哪一条闸门挡住了。</p>
+        <div class="diag" id="lastBlock">—</div>
+        <div class="row row--right">
+          <button class="btn" id="btnRefreshLog">刷新日志</button>
+        </div>
+        <div class="log" id="logList"></div>
+      </section>
+      <!-- ============ 开发 ============ -->
+      <section class="card" id="developer">
+        <h2>开发</h2>
+        <p class="hint">
+          改代码时不想手动点重载？先在命令行跑 <code>node tools/watch.mjs</code>，
+          再打开下面的开关。之后改 <code>src/</code> 下的文件，扩展会自己刷新。
+        </p>
+        <label class="switch">
+          <input type="checkbox" id="devReload" />
+          <span class="track"><span class="thumb"></span></span>
+          <span>
+            <b>开发时自动重载</b>
+            <em>打开后会每 2 秒轮询本机的监听脚本，代码一变就自动重载扩展。脚本没在跑时会自动停止轮询。平时请保持关闭。</em>
+          </span>
+        </label>
+        <p class="hint">
+          注意两点：<code>manifest.json</code> 的改动仍需在 <code>edge://extensions</code> 手动刷新；
+          内容脚本的改动要刷新页面才会生效。
+        </p>
+      </section>
+
+      </main>
+    </div>
+
+    <dialog class="settings-dialog word-editor" id="wordEditor" aria-labelledby="wordEditorTitle">
+      <form id="wordEditForm">
+        <h2 id="wordEditorTitle">编辑词条</h2>
+        <p class="hint">保留学习身份；修改释义与例句不会重置进度。</p>
+        <div class="grid">
+          <label class="field"><span class="label">单词或短语</span><input type="text" id="editTerm" readonly /><span class="desc">修改单词本身时，请新建一个词条。</span></label>
+          <label class="field"><span class="label">中文释义</span><input type="text" id="editMeaning" required /></label>
+          <label class="field"><span class="label">音标</span><input type="text" id="editPhonetic" /></label>
+          <label class="field"><span class="label">词性</span><input type="text" id="editPos" /></label>
+          <label class="field"><span class="label">英文例句</span><textarea id="editExample" rows="3"></textarea></label>
+          <label class="field"><span class="label">例句翻译</span><textarea id="editExampleZh" rows="3"></textarea></label>
+          <label class="field"><span class="label">类型</span><select id="editType"><option value="word">单词</option><option value="phrase">短语</option></select></label>
+          <label class="field"><span class="label">分类标签</span><input type="text" id="editTags" placeholder="例如 daily|spoken" /></label>
+        </div>
+        <p class="result" id="editResult" role="status"></p>
+        <div class="row row--right"><button class="btn" id="btnCancelEdit" type="button">取消</button><button class="btn btn--primary" id="btnSaveWord" type="submit">保存修改</button></div>
+      </form>
+    </dialog>
+
+    <dialog class="settings-dialog guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+      <form id="guideForm" method="dialog">
+        <p class="eyebrow" id="guideStepLabel">第 1 步 / 共 3 步</p>
+        <h2 id="guideTitle" tabindex="-1">从适合你的英语开始</h2>
+        <section id="guideStep1">
+          <p class="hint">先选一个场景，稍后仍可在设置中调整。</p>
+          <label class="field"><span class="label">学习场景</span><select id="guideScene"></select></label>
+          <p class="desc">使用本机内置词库，原有生词与学习进度会继续保留。</p>
+        </section>
+        <section id="guideStep2" hidden>
+          <label class="field"><span class="label">提醒节奏</span><select id="guideRhythm"></select></label>
+          <div class="grid">
+            <label class="field"><span class="label">每日目标（张）</span><input type="number" id="guideGoal" min="1" max="200" step="1" value="10" /></label>
+            <label class="field"><span class="label">如何计算完成</span><select id="guideMetric"><option value="answered">主动作答</option><option value="shown">卡片展示</option></select></label>
+          </div>
+          <label class="switch"><input type="checkbox" id="guideNotify" /><span class="track"><span class="thumb"></span></span><span><b>浏览器不在前台时也提醒</b><em>使用系统通知，默认静音；主动学习模式下不启用。</em></span></label>
+        </section>
+        <section id="guideStep3" hidden><p class="hint">确认这些偏好，然后试学一张。</p><div class="diag" id="guideSummary"></div></section>
+        <p class="result" id="guideResult" role="status"></p>
+        <div class="row row--right"><button class="btn" id="guidePrev" type="button" hidden>上一步</button><button class="btn btn--primary" id="guideNext" type="button">下一步</button><button class="btn btn--primary" id="guideFinish" type="button" hidden>保存并试学</button></div>
+        <button class="link guide-skip" id="guideSkip" type="button">暂时跳过，先保持手动学习</button>
+      </form>
+    </dialog>
+
+    <footer class="bottom">
+      <span>语滴 Lingo Sip v1.2.15 · 零依赖 · 纯本地</span>
+      <a href="#settingsContent">回到顶部 <span aria-hidden="true">↑</span></a>
+    </footer>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

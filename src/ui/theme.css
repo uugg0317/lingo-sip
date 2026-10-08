@@ -1,0 +1,48 @@
+/* 页面共用设计令牌；Shadow DOM 卡片与宿主网页隔离。 */
+:root {
+  color-scheme: light dark;
+  --accent: #4f5bd5;
+  --accent-2: #5966ca;
+  --accent-soft: #eceefa;
+  --on-accent: #fff;
+  --text: #20243a;
+  --muted: #646b83;
+  --bg: #f5f6fa;
+  --surface: #fff;
+  --soft: #eef0f8;
+  --line: #dfe3ee;
+  --success: #237657;
+  --danger: #b83c4e;
+  --shadow: 0 12px 36px rgba(32, 36, 58, .055);
+  --radius: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-synthesis: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #a3abff;
+    --accent-2: #b9bfff;
+    --accent-soft: #303654;
+    --on-accent: #171a29;
+    --text: #edf0fa;
+    --muted: #b0b7cd;
+    --bg: #151824;
+    --surface: #1e2233;
+    --soft: #282d42;
+    --line: #383f59;
+    --success: #86d4af;
+    --danger: #ff9aa8;
+    --shadow: 0 12px 36px rgba(0, 0, 0, .15);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .6; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--accent-soft); color: var(--text); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}

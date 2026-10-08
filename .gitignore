@@ -1,0 +1,12 @@
+node_modules/
+*.crx
+*.pem
+# 打包产物目录（.crx 已被 *.crx 覆盖；这里同时挡住 --xml 生成的 updates.xml）
+dist/
+.DS_Store
+Thumbs.db
+
+# 本地签名材料与用户数据导出
+.keys/
+lingo-sip-recovered-backup.json
+语滴-恢复备份.json

@@ -1,0 +1,61 @@
+/* 工具栏面板会按内容自动定尺寸：根元素必须有稳定的内在宽度。 */
+html, body { width: 360px; min-width: 360px; max-width: 360px; }
+html { margin: 0; padding: 0; background: var(--surface); }
+body { padding: 14px; background: var(--surface); font-size: 13px; line-height: 1.45; }
+[hidden] { display: none !important; }
+p { margin: 0; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.brand { display: flex; align-items: center; flex: none; gap: 9px; font-size: 18px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.name small { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; line-height: 1.2; letter-spacing: .16em; white-space: nowrap; }
+.dot { display: block; width: 12px; height: 17px; border-radius: 10px 10px 10px 2px; background: var(--accent); transform: rotate(-35deg); flex: none; }
+.status { max-width: 210px; font-size: 11px; line-height: 1.5; padding: 5px 8px; background: var(--soft); border-radius: 7px; color: var(--muted); white-space: nowrap; }
+.progress { display: flex; align-items: center; gap: 14px; padding: 0 2px 12px; }
+.progress-text { flex: 1; min-width: 0; }
+.ring { position: relative; width: 68px; height: 68px; flex: none; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 3; stroke-linecap: round; }
+.ring-bg { stroke: var(--soft); }
+.ring-fg { stroke: var(--accent); stroke-dasharray: 113.097; stroke-dashoffset: 113.097; transition: stroke-dashoffset .3s ease; }
+.ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-variant-numeric: tabular-nums; }
+.ring-text b { font-size: 21px; font-weight: 650; line-height: 1.1; white-space: nowrap; }
+.ring-text b.is-large { font-size: 16px; }
+.ring-text span { color: var(--muted); font-size: 10px; line-height: 1.2; white-space: nowrap; }
+.line1 { font-size: 14px; line-height: 1.5; font-weight: 600; }
+.goal-metric { color: var(--accent); font-size: 11px; margin-bottom: 3px; }
+.line2 { color: var(--muted); font-size: 11px; line-height: 1.45; margin-top: 3px; }
+.today-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 6px 10px; background: var(--soft); border-radius: 9px; }
+.today-details > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.today-details span { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.today-details b { font-size: 15px; line-height: 1.4; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.category-details { color: var(--muted); font-size: 10px; line-height: 1.5; margin-top: 5px; margin-bottom: 10px; }
+.category-details b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.category-note { margin-left: 4px; font-size: 10px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.cell { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 4px; text-align: center; }
+.cell b { display: block; font-size: 19px; line-height: 1.25; font-weight: 650; margin-bottom: 2px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cell span { color: var(--muted); font-size: 10px; line-height: 1.5; white-space: nowrap; }
+.primary { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; border: 0; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-size: 14px; font-weight: 600; }
+.primary span { font-size: 18px; }
+.primary:hover { filter: brightness(1.07); }
+.pause { margin-top: 12px; }
+.label { font-size: 11px; line-height: 1.5; color: var(--muted); margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { min-height: 32px; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 8px; padding: 5px 11px; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+.chip:hover { border-color: var(--accent); background: var(--accent-soft); }
+.chip.active { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.switch-row { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+.switch { display: flex; align-items: center; gap: 12px; position: relative; cursor: pointer; min-height: 36px; }
+.switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.track { position: relative; width: 38px; height: 22px; background: var(--muted); border-radius: 20px; flex: none; transition: background .18s; }
+.thumb { position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: var(--surface); border-radius: 50%; transition: transform .18s; }
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track .thumb { transform: translateX(16px); background: var(--on-accent); }
+.switch input:focus-visible + .track { outline: 3px solid var(--accent); outline-offset: 3px; }
+.switch-label { font-size: 12px; white-space: nowrap; }
+.switch-label small { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
+.feedback { color: var(--danger); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.feedback:not(:empty) { margin-top: 8px; }
+body:has(.feedback:not(:empty)) .category-details { display: none; }
+.foot { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 6px; margin-top: 10px; }
+.link { color: var(--muted); background: none; border: 0; min-height: 28px; padding: 5px 0; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+.link:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }

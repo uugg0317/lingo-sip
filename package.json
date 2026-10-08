@@ -1,0 +1,30 @@
+{
+  "name": "lingo-sip",
+  "version": "1.2.15",
+  "private": true,
+  "type": "module",
+  "description": "语滴 Lingo Sip —— 碎片时间英语学习浏览器扩展（Chrome / Edge MV3）。零运行时依赖；package.json 只用来让 Node 以 ES Module 方式加载 src 做自检。",
+  "scripts": {
+    "check": "node tools/validate.js",
+    "test": "node tools/test-all.mjs",
+    "test:core": "node tools/selftest.js",
+    "test:words": "node tools/wordbank-selftest.mjs",
+    "test:learning": "node tools/learning-selftest.mjs",
+    "test:tts": "node tools/tts-selftest.mjs",
+    "test:session": "node tools/session-selftest.mjs",
+    "test:notice": "node tools/notice-selftest.mjs",
+    "test:manager": "node tools/word-manager-selftest.mjs",
+    "test:onboarding": "node tools/onboarding-selftest.mjs",
+    "test:card": "node tools/card-selftest.mjs",
+    "test:lifecycle": "node tools/lifecycle-selftest.mjs",
+    "test:browser": "node tools/browser-check.mjs",
+    "test:study": "node tools/study-layout-check.mjs",
+    "test:popup": "node tools/popup-layout-check.mjs",
+    "icons": "node tools/make-icons.mjs",
+    "pack": "node tools/pack.mjs",
+    "verify:crx": "node tools/verify-crx.mjs",
+    "dev": "node tools/watch.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
